@@ -1,0 +1,404 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized dealership administrator record.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "role": { "type": "string", "enum": ["super_admin", "admin", "sales_manager"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private customer account profile containing PII.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "location": { "type": "string", "maxLength": 120 },
+        "whatsappOptIn": { "type": "boolean" },
+        "emailNotifications": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "email", "createdAt", "updatedAt"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Vehicle saved to customer wishlist.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "vehicleId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "vehicleName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "priceNgn": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "vehicleId", "vehicleName", "priceNgn", "createdAt"]
+    },
+    "CustomerNotification": {
+      "title": "CustomerNotification",
+      "description": "Customer notification item.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 800 },
+        "category": { "type": "string", "enum": ["enquiry", "financing", "savings", "payment", "valuation", "quotation", "system"] },
+        "referenceNumber": { "type": "string", "maxLength": 40 },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "category", "isRead", "createdAt"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Dealership vehicle inventory listing.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 180, "pattern": "^[a-z0-9\\-]+$" },
+        "referenceCode": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "make": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "model": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "year": { "type": "integer" },
+        "priceNgn": { "type": "number" },
+        "previousPriceNgn": { "type": "number" },
+        "location": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "condition": { "type": "string", "enum": ["Foreign Used", "Nigerian Used", "Brand New"] },
+        "transmission": { "type": "string", "enum": ["Automatic", "Manual", "CVT", "Semi-Automatic"] },
+        "fuelType": { "type": "string", "enum": ["Petrol", "Diesel", "Hybrid", "Electric"] },
+        "bodyType": { "type": "string", "enum": ["SUV", "Sedan", "Hatchback", "Coupe", "Pickup", "Bus", "Convertible", "Wagon"] },
+        "mileageKm": { "type": "number" },
+        "engineSize": { "type": "string", "maxLength": 40 },
+        "exteriorColor": { "type": "string", "maxLength": 40 },
+        "interiorColor": { "type": "string", "maxLength": 40 },
+        "vin": { "type": "string", "maxLength": 40 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "images": { "type": "array" },
+        "verified": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "financingAvailable": { "type": "boolean" },
+        "saveToOwnAvailable": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["available", "reserved", "sold"] },
+        "popularityScore": { "type": "number" },
+        "isSampleInventory": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "referenceCode", "name", "make", "model", "year", "priceNgn", "location", "condition", "transmission", "fuelType", "bodyType", "mileageKm", "description", "images", "verified", "featured", "financingAvailable", "saveToOwnAvailable", "status", "createdAt", "updatedAt"]
+    },
+    "DealershipSettings": {
+      "title": "DealershipSettings",
+      "description": "Public dealership contact, chatbot, and homepage configuration.",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string", "maxLength": 120 },
+        "publicListingTitle": { "type": "string", "maxLength": 180 },
+        "tagline": { "type": "string", "maxLength": 120 },
+        "whatsappNumber": { "type": "string", "maxLength": 32 },
+        "phoneNumber": { "type": "string", "maxLength": 32 },
+        "email": { "type": "string", "maxLength": 160 },
+        "address": { "type": "string", "maxLength": 300 },
+        "city": { "type": "string", "maxLength": 80 },
+        "businessHours": { "type": "string", "maxLength": 160 },
+        "googleBusinessUrl": { "type": "string", "maxLength": 400 },
+        "chatbotEnabled": { "type": "boolean" },
+        "chatbotName": { "type": "string", "maxLength": 80 },
+        "chatbotWelcomeMessage": { "type": "string", "maxLength": 1000 },
+        "chatbotInstructions": { "type": "string", "maxLength": 3000 },
+        "faqs": { "type": "array" },
+        "popularBrands": { "type": "array" },
+        "promoBanners": { "type": "array" },
+        "sampleInventorySeeded": { "type": "boolean" },
+        "sampleInventoryCleared": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["updatedAt"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Verified customer testimonial managed by dealership admins.",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "location": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "vehiclePurchased": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "quote": { "type": "string", "minLength": 5, "maxLength": 800 },
+        "rating": { "type": "integer" },
+        "published": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "location", "vehiclePurchased", "quote", "rating", "published", "createdAt"]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Customer vehicle or sales enquiry.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "customerPhone": { "type": "string", "minLength": 6, "maxLength": 32 },
+        "customerEmail": { "type": "string", "maxLength": 200 },
+        "vehicleId": { "type": "string", "maxLength": 128 },
+        "vehicleName": { "type": "string", "maxLength": 180 },
+        "category": { "type": "string", "enum": ["car_purchase", "financing", "save_to_own", "sell_car", "quotation", "inspection", "general"] },
+        "budgetNgn": { "type": "number" },
+        "paymentPreference": { "type": "string", "maxLength": 60 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "source": { "type": "string", "enum": ["website", "chatbot", "whatsapp"] },
+        "status": { "type": "string", "enum": ["new", "contacted", "quoted", "closed"] },
+        "whatsappNotificationStatus": { "type": "string", "enum": ["pending", "sent", "failed", "not_configured"] },
+        "adminNotes": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "customerName", "customerPhone", "category", "message", "source", "status", "whatsappNotificationStatus", "createdAt", "updatedAt"]
+    },
+    "FinancingApplication": {
+      "title": "FinancingApplication",
+      "description": "Buy Now Pay Later car financing application subject to dealership approval.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "vehicleId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "vehicleName": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "vehiclePriceNgn": { "type": "number" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 6, "maxLength": 32 },
+        "email": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "residentialAddress": { "type": "string", "minLength": 4, "maxLength": 300 },
+        "employmentStatus": { "type": "string", "enum": ["Employed", "Self-Employed", "Business Owner", "Corporate"] },
+        "employerName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "monthlyIncomeNgn": { "type": "number" },
+        "preferredDepositNgn": { "type": "number" },
+        "repaymentMonths": { "type": "integer" },
+        "documentUrls": { "type": "array" },
+        "acceptedDisclosure": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["submitted", "under_review", "info_requested", "approved", "rejected"] },
+        "approvedDepositNgn": { "type": "number" },
+        "approvedMonthlyPaymentNgn": { "type": "number" },
+        "approvedMonths": { "type": "integer" },
+        "interestRatePercent": { "type": "number" },
+        "depositRecordedNgn": { "type": "number" },
+        "repaymentSchedule": { "type": "array" },
+        "adminRemarks": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "vehicleId", "vehicleName", "vehiclePriceNgn", "fullName", "phone", "email", "residentialAddress", "employmentStatus", "employerName", "monthlyIncomeNgn", "preferredDepositNgn", "repaymentMonths", "documentUrls", "acceptedDisclosure", "status", "approvedDepositNgn", "approvedMonthlyPaymentNgn", "approvedMonths", "depositRecordedNgn", "repaymentSchedule", "createdAt", "updatedAt"]
+    },
+    "SavingsPlan": {
+      "title": "SavingsPlan",
+      "description": "Save to Own Pay Small Small savings plan.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "vehicleId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "vehicleName": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "targetPriceNgn": { "type": "number" },
+        "priceLocked": { "type": "boolean" },
+        "durationMonths": { "type": "integer" },
+        "frequency": { "type": "string", "enum": ["weekly", "monthly"] },
+        "suggestedContributionNgn": { "type": "number" },
+        "confirmedPaidNgn": { "type": "number" },
+        "pendingPaidNgn": { "type": "number" },
+        "agreedToTerms": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "completed", "paused", "refund_requested", "refunded", "cancelled"] },
+        "nextReminderDate": { "type": "string", "maxLength": 40 },
+        "adminNotes": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "vehicleId", "vehicleName", "targetPriceNgn", "priceLocked", "durationMonths", "frequency", "suggestedContributionNgn", "confirmedPaidNgn", "pendingPaidNgn", "agreedToTerms", "status", "createdAt", "updatedAt"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Customer deposit, savings contribution, or installment payment pending verification or verified.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "relatedType": { "type": "string", "enum": ["savings", "financing_deposit", "financing_installment", "vehicle_deposit"] },
+        "relatedId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "amountNgn": { "type": "number" },
+        "method": { "type": "string", "enum": ["paystack", "bank_transfer"] },
+        "gatewayReference": { "type": "string", "maxLength": 120 },
+        "receiptUrl": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending_verification", "verified", "rejected"] },
+        "verifiedBy": { "type": "string", "maxLength": 128 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "relatedType", "relatedId", "amountNgn", "method", "status", "createdAt", "updatedAt"]
+    },
+    "VehicleSubmission": {
+      "title": "VehicleSubmission",
+      "description": "Customer Sell Your Car valuation or consignment submission.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "arrangement": { "type": "string", "enum": ["direct_purchase", "consignment"] },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 6, "maxLength": 32 },
+        "email": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "make": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "model": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "year": { "type": "integer" },
+        "mileageKm": { "type": "number" },
+        "condition": { "type": "string", "enum": ["Foreign Used", "Nigerian Used", "Brand New"] },
+        "transmission": { "type": "string", "enum": ["Automatic", "Manual", "CVT", "Semi-Automatic"] },
+        "fuelType": { "type": "string", "enum": ["Petrol", "Diesel", "Hybrid", "Electric"] },
+        "location": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "expectedPriceNgn": { "type": "number" },
+        "description": { "type": "string", "minLength": 5, "maxLength": 3000 },
+        "images": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending_review", "valued", "offer_sent", "approved_for_listing", "purchased", "declined"] },
+        "proposedValuationNgn": { "type": "number" },
+        "adminOfferNotes": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "arrangement", "fullName", "phone", "email", "make", "model", "year", "mileageKm", "condition", "transmission", "fuelType", "location", "expectedPriceNgn", "description", "images", "status", "createdAt", "updatedAt"]
+    },
+    "CarQuotation": {
+      "title": "CarQuotation",
+      "description": "Request a Car quotation enquiry.",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 6, "maxLength": 32 },
+        "email": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "preferredBrand": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "preferredModel": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "preferredYear": { "type": "integer" },
+        "budgetNgn": { "type": "number" },
+        "preferredCondition": { "type": "string", "enum": ["Foreign Used", "Nigerian Used", "Brand New", "Any"] },
+        "location": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "paymentPreference": { "type": "string", "enum": ["Outright", "Installment", "Financing"] },
+        "additionalRequirements": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["pending", "sourcing", "quoted", "accepted", "closed"] },
+        "quotedPriceNgn": { "type": "number" },
+        "adminQuoteNotes": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["referenceNumber", "userId", "fullName", "phone", "email", "preferredBrand", "preferredModel", "preferredYear", "budgetNgn", "preferredCondition", "location", "paymentPreference", "status", "createdAt", "updatedAt"]
+    },
+    "ChatConversation": {
+      "title": "ChatConversation",
+      "description": "AI Chatbot customer conversation and collected enquiry summary.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 3, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "customerPhone": { "type": "string", "maxLength": 32 },
+        "enquiryCategory": { "type": "string", "maxLength": 60 },
+        "preferredVehicle": { "type": "string", "maxLength": 160 },
+        "budgetNgn": { "type": "number" },
+        "paymentPreference": { "type": "string", "maxLength": 60 },
+        "enquiryReference": { "type": "string", "maxLength": 40 },
+        "whatsappNotificationStatus": { "type": "string", "enum": ["none", "pending", "sent", "failed", "not_configured"] },
+        "handoverRequested": { "type": "boolean" },
+        "unansweredFlag": { "type": "boolean" },
+        "messages": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "userId", "whatsappNotificationStatus", "handoverRequested", "unansweredFlag", "messages", "createdAt", "updatedAt"]
+    },
+    "WhatsAppLog": {
+      "title": "WhatsAppLog",
+      "description": "Audit log for automated WhatsApp Business notifications.",
+      "type": "object",
+      "properties": {
+        "enquiryReference": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "recipientPhone": { "type": "string", "minLength": 6, "maxLength": 32 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 60 },
+        "payloadSummary": { "type": "string", "minLength": 2, "maxLength": 1500 },
+        "status": { "type": "string", "enum": ["sent", "failed", "not_configured"] },
+        "providerMessageId": { "type": "string", "maxLength": 160 },
+        "errorMessage": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["enquiryReference", "recipientPhone", "category", "payloadSummary", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized dealership administrators."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private customer profile containing PII."
+    },
+    "/users/{userId}/wishlist/{vehicleId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "Customer saved vehicles."
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/CustomerNotification" },
+      "description": "Customer notifications."
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": { "$ref": "#/entities/Vehicle" },
+      "description": "Publicly browsable dealership vehicle inventory."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/DealershipSettings" },
+      "description": "Dealership configuration, chatbot settings, banners, and FAQs."
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": { "$ref": "#/entities/Testimonial" },
+      "description": "Verified customer testimonials."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/Enquiry" },
+      "description": "Customer vehicle enquiries and chatbot leads."
+    },
+    "/financingApplications/{applicationId}": {
+      "schema": { "$ref": "#/entities/FinancingApplication" },
+      "description": "Buy Now Pay Later car financing applications."
+    },
+    "/savingsPlans/{planId}": {
+      "schema": { "$ref": "#/entities/SavingsPlan" },
+      "description": "Save to Own Pay Small Small plans."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "Payment and receipt records requiring verification."
+    },
+    "/vehicleSubmissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/VehicleSubmission" },
+      "description": "Customer Sell Your Car valuation and consignment requests."
+    },
+    "/quotations/{quotationId}": {
+      "schema": { "$ref": "#/entities/CarQuotation" },
+      "description": "Customer Request a Car quotation submissions."
+    },
+    "/chatConversations/{sessionId}": {
+      "schema": { "$ref": "#/entities/ChatConversation" },
+      "description": "Saved AI chatbot conversations."
+    },
+    "/whatsappLogs/{logId}": {
+      "schema": { "$ref": "#/entities/WhatsAppLog" },
+      "description": "WhatsApp Business notification delivery logs."
+    }
+  }
+}

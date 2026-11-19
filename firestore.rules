@@ -1,0 +1,667 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'usitakatelvin@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidTimestamp(val) {
+      return val is timestamp;
+    }
+
+    function isBoundedString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isNonNegNumber(val) {
+      return val is number && val >= 0;
+    }
+
+    // --- Validation Blueprints ---
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'name', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'name', 'role', 'createdAt']) &&
+        isValidId(data.uid) &&
+        isBoundedString(data.email, 3, 200) &&
+        isBoundedString(data.name, 1, 120) &&
+        data.role in ['super_admin', 'admin', 'sales_manager'] &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'fullName', 'email', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'fullName', 'email', 'phone', 'location', 'whatsappOptIn', 'emailNotifications', 'createdAt', 'updatedAt']) &&
+        data.uid == userId &&
+        isBoundedString(data.fullName, 1, 120) &&
+        isBoundedString(data.email, 3, 200) &&
+        (!('phone' in data) || isBoundedString(data.phone, 0, 32)) &&
+        (!('location' in data) || isBoundedString(data.location, 0, 120)) &&
+        (!('whatsappOptIn' in data) || data.whatsappOptIn is bool) &&
+        (!('emailNotifications' in data) || data.emailNotifications is bool) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidWishlistItem(data, userId, vehicleId) {
+      return data.keys().hasAll(['userId', 'vehicleId', 'vehicleName', 'priceNgn', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'vehicleId', 'vehicleName', 'priceNgn', 'createdAt']) &&
+        data.userId == userId &&
+        data.vehicleId == vehicleId &&
+        isBoundedString(data.vehicleName, 1, 160) &&
+        isNonNegNumber(data.priceNgn) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidNotification(data, userId) {
+      return data.keys().hasAll(['userId', 'title', 'message', 'category', 'isRead', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'title', 'message', 'category', 'referenceNumber', 'isRead', 'createdAt']) &&
+        data.userId == userId &&
+        isBoundedString(data.title, 1, 160) &&
+        isBoundedString(data.message, 1, 800) &&
+        data.category in ['enquiry', 'financing', 'savings', 'payment', 'valuation', 'quotation', 'system'] &&
+        (!('referenceNumber' in data) || isBoundedString(data.referenceNumber, 0, 40)) &&
+        data.isRead is bool &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidVehicle(data) {
+      return data.keys().hasAll([
+          'slug', 'referenceCode', 'name', 'make', 'model', 'year', 'priceNgn',
+          'location', 'condition', 'transmission', 'fuelType', 'bodyType',
+          'mileageKm', 'description', 'images', 'verified', 'featured',
+          'financingAvailable', 'saveToOwnAvailable', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'slug', 'referenceCode', 'name', 'make', 'model', 'year', 'priceNgn',
+          'previousPriceNgn', 'location', 'condition', 'transmission', 'fuelType',
+          'bodyType', 'mileageKm', 'engineSize', 'exteriorColor', 'interiorColor',
+          'vin', 'description', 'images', 'verified', 'featured',
+          'financingAvailable', 'saveToOwnAvailable', 'status', 'popularityScore',
+          'isSampleInventory', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.slug, 2, 180) &&
+        data.slug.matches('^[a-z0-9\\-]+$') &&
+        isBoundedString(data.referenceCode, 3, 40) &&
+        isBoundedString(data.name, 2, 160) &&
+        isBoundedString(data.make, 1, 60) &&
+        isBoundedString(data.model, 1, 80) &&
+        data.year is int && data.year >= 1980 && data.year <= 2030 &&
+        isNonNegNumber(data.priceNgn) &&
+        (!('previousPriceNgn' in data) || isNonNegNumber(data.previousPriceNgn)) &&
+        isBoundedString(data.location, 2, 120) &&
+        data.condition in ['Foreign Used', 'Nigerian Used', 'Brand New'] &&
+        data.transmission in ['Automatic', 'Manual', 'CVT', 'Semi-Automatic'] &&
+        data.fuelType in ['Petrol', 'Diesel', 'Hybrid', 'Electric'] &&
+        data.bodyType in ['SUV', 'Sedan', 'Hatchback', 'Coupe', 'Pickup', 'Bus', 'Convertible', 'Wagon'] &&
+        isNonNegNumber(data.mileageKm) &&
+        (!('engineSize' in data) || isBoundedString(data.engineSize, 0, 40)) &&
+        (!('exteriorColor' in data) || isBoundedString(data.exteriorColor, 0, 40)) &&
+        (!('interiorColor' in data) || isBoundedString(data.interiorColor, 0, 40)) &&
+        (!('vin' in data) || isBoundedString(data.vin, 0, 40)) &&
+        isBoundedString(data.description, 1, 5000) &&
+        data.images is list && data.images.size() <= 12 &&
+        (data.images.size() == 0 || isBoundedString(data.images[0], 5, 600)) &&
+        data.verified is bool &&
+        data.featured is bool &&
+        data.financingAvailable is bool &&
+        data.saveToOwnAvailable is bool &&
+        data.status in ['available', 'reserved', 'sold'] &&
+        (!('popularityScore' in data) || isNonNegNumber(data.popularityScore)) &&
+        (!('isSampleInventory' in data) || data.isSampleInventory is bool) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['updatedAt']) &&
+        data.keys().hasOnly([
+          'businessName', 'publicListingTitle', 'tagline', 'whatsappNumber',
+          'phoneNumber', 'email', 'address', 'city', 'businessHours',
+          'googleBusinessUrl', 'chatbotEnabled', 'chatbotName',
+          'chatbotWelcomeMessage', 'chatbotInstructions', 'faqs',
+          'faqs', 'popularBrands', 'promoBanners',
+          'sampleInventorySeeded', 'sampleInventoryCleared', 'updatedAt'
+        ]) &&
+        (!('businessName' in data) || isBoundedString(data.businessName, 1, 120)) &&
+        (!('publicListingTitle' in data) || isBoundedString(data.publicListingTitle, 1, 180)) &&
+        (!('tagline' in data) || isBoundedString(data.tagline, 1, 120)) &&
+        (!('whatsappNumber' in data) || isBoundedString(data.whatsappNumber, 6, 32)) &&
+        (!('phoneNumber' in data) || isBoundedString(data.phoneNumber, 6, 32)) &&
+        (!('email' in data) || isBoundedString(data.email, 0, 160)) &&
+        (!('address' in data) || isBoundedString(data.address, 0, 300)) &&
+        (!('city' in data) || isBoundedString(data.city, 0, 80)) &&
+        (!('businessHours' in data) || isBoundedString(data.businessHours, 0, 160)) &&
+        (!('googleBusinessUrl' in data) || isBoundedString(data.googleBusinessUrl, 0, 400)) &&
+        (!('chatbotEnabled' in data) || data.chatbotEnabled is bool) &&
+        (!('chatbotName' in data) || isBoundedString(data.chatbotName, 1, 80)) &&
+        (!('chatbotWelcomeMessage' in data) || isBoundedString(data.chatbotWelcomeMessage, 1, 1000)) &&
+        (!('chatbotInstructions' in data) || isBoundedString(data.chatbotInstructions, 0, 3000)) &&
+        (!('faqs' in data) || (data.faqs is list && data.faqs.size() <= 30)) &&
+        (!('popularBrands' in data) || (data.popularBrands is list && data.popularBrands.size() <= 30)) &&
+        (!('promoBanners' in data) || (data.promoBanners is list && data.promoBanners.size() <= 10)) &&
+        (!('sampleInventorySeeded' in data) || data.sampleInventorySeeded is bool) &&
+        (!('sampleInventoryCleared' in data) || data.sampleInventoryCleared is bool) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['customerName', 'location', 'vehiclePurchased', 'quote', 'rating', 'published', 'createdAt']) &&
+        data.keys().hasOnly(['customerName', 'location', 'vehiclePurchased', 'quote', 'rating', 'published', 'createdAt']) &&
+        isBoundedString(data.customerName, 2, 100) &&
+        isBoundedString(data.location, 2, 100) &&
+        isBoundedString(data.vehiclePurchased, 2, 120) &&
+        isBoundedString(data.quote, 5, 800) &&
+        data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+        data.published is bool &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'customerName', 'customerPhone',
+          'category', 'message', 'source', 'status',
+          'whatsappNotificationStatus', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'customerName', 'customerPhone',
+          'customerEmail', 'vehicleId', 'vehicleName', 'category', 'budgetNgn',
+          'paymentPreference', 'message', 'source', 'status',
+          'whatsappNotificationStatus', 'adminNotes', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        isBoundedString(data.customerName, 2, 120) &&
+        isBoundedString(data.customerPhone, 6, 32) &&
+        (!('customerEmail' in data) || isBoundedString(data.customerEmail, 0, 200)) &&
+        (!('vehicleId' in data) || isBoundedString(data.vehicleId, 0, 128)) &&
+        (!('vehicleName' in data) || isBoundedString(data.vehicleName, 0, 180)) &&
+        data.category in ['car_purchase', 'financing', 'save_to_own', 'sell_car', 'quotation', 'inspection', 'general'] &&
+        (!('budgetNgn' in data) || isNonNegNumber(data.budgetNgn)) &&
+        (!('paymentPreference' in data) || isBoundedString(data.paymentPreference, 0, 60)) &&
+        isBoundedString(data.message, 1, 2000) &&
+        data.source in ['website', 'chatbot', 'whatsapp'] &&
+        data.status in ['new', 'contacted', 'quoted', 'closed'] &&
+        data.whatsappNotificationStatus in ['pending', 'sent', 'failed', 'not_configured'] &&
+        (!('adminNotes' in data) || isBoundedString(data.adminNotes, 0, 1500)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidFinancingApplication(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'vehicleId', 'vehicleName', 'vehiclePriceNgn',
+          'fullName', 'phone', 'email', 'residentialAddress', 'employmentStatus',
+          'employerName', 'monthlyIncomeNgn', 'preferredDepositNgn', 'repaymentMonths',
+          'documentUrls', 'acceptedDisclosure', 'status', 'approvedDepositNgn',
+          'approvedMonthlyPaymentNgn', 'approvedMonths', 'depositRecordedNgn',
+          'repaymentSchedule', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'vehicleId', 'vehicleName', 'vehiclePriceNgn',
+          'fullName', 'phone', 'email', 'residentialAddress', 'employmentStatus',
+          'employerName', 'monthlyIncomeNgn', 'preferredDepositNgn', 'repaymentMonths',
+          'documentUrls', 'acceptedDisclosure', 'status', 'approvedDepositNgn',
+          'approvedMonthlyPaymentNgn', 'approvedMonths', 'interestRatePercent',
+          'depositRecordedNgn', 'repaymentSchedule', 'adminRemarks', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        isBoundedString(data.vehicleId, 1, 128) &&
+        isBoundedString(data.vehicleName, 2, 180) &&
+        isNonNegNumber(data.vehiclePriceNgn) &&
+        isBoundedString(data.fullName, 2, 120) &&
+        isBoundedString(data.phone, 6, 32) &&
+        isBoundedString(data.email, 3, 200) &&
+        isBoundedString(data.residentialAddress, 4, 300) &&
+        data.employmentStatus in ['Employed', 'Self-Employed', 'Business Owner', 'Corporate'] &&
+        isBoundedString(data.employerName, 2, 160) &&
+        isNonNegNumber(data.monthlyIncomeNgn) &&
+        isNonNegNumber(data.preferredDepositNgn) &&
+        data.repaymentMonths is int && data.repaymentMonths >= 3 && data.repaymentMonths <= 60 &&
+        data.documentUrls is list && data.documentUrls.size() <= 6 &&
+        (data.documentUrls.size() == 0 || isBoundedString(data.documentUrls[0], 5, 600)) &&
+        data.acceptedDisclosure == true &&
+        data.status in ['submitted', 'under_review', 'info_requested', 'approved', 'rejected'] &&
+        isNonNegNumber(data.approvedDepositNgn) &&
+        isNonNegNumber(data.approvedMonthlyPaymentNgn) &&
+        data.approvedMonths is int && data.approvedMonths >= 0 && data.approvedMonths <= 60 &&
+        (!('interestRatePercent' in data) || isNonNegNumber(data.interestRatePercent)) &&
+        isNonNegNumber(data.depositRecordedNgn) &&
+        data.repaymentSchedule is list && data.repaymentSchedule.size() <= 60 &&
+        (!('adminRemarks' in data) || isBoundedString(data.adminRemarks, 0, 2000)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidSavingsPlan(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'vehicleId', 'vehicleName', 'targetPriceNgn',
+          'priceLocked', 'durationMonths', 'frequency', 'suggestedContributionNgn',
+          'confirmedPaidNgn', 'pendingPaidNgn', 'agreedToTerms', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'vehicleId', 'vehicleName', 'targetPriceNgn',
+          'priceLocked', 'durationMonths', 'frequency', 'suggestedContributionNgn',
+          'confirmedPaidNgn', 'pendingPaidNgn', 'agreedToTerms', 'status',
+          'nextReminderDate', 'adminNotes', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        isBoundedString(data.vehicleId, 1, 128) &&
+        isBoundedString(data.vehicleName, 2, 180) &&
+        isNonNegNumber(data.targetPriceNgn) &&
+        data.priceLocked is bool &&
+        data.durationMonths is int && data.durationMonths >= 1 && data.durationMonths <= 48 &&
+        data.frequency in ['weekly', 'monthly'] &&
+        isNonNegNumber(data.suggestedContributionNgn) &&
+        isNonNegNumber(data.confirmedPaidNgn) &&
+        isNonNegNumber(data.pendingPaidNgn) &&
+        data.agreedToTerms == true &&
+        data.status in ['active', 'completed', 'paused', 'refund_requested', 'refunded', 'cancelled'] &&
+        (!('nextReminderDate' in data) || isBoundedString(data.nextReminderDate, 0, 40)) &&
+        (!('adminNotes' in data) || isBoundedString(data.adminNotes, 0, 1500)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidPaymentRecord(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'relatedType', 'relatedId', 'amountNgn',
+          'method', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'relatedType', 'relatedId', 'amountNgn',
+          'method', 'gatewayReference', 'receiptUrl', 'status', 'verifiedBy',
+          'notes', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        data.relatedType in ['savings', 'financing_deposit', 'financing_installment', 'vehicle_deposit'] &&
+        isValidId(data.relatedId) &&
+        data.amountNgn is number && data.amountNgn > 0 &&
+        data.method in ['paystack', 'bank_transfer'] &&
+        (!('gatewayReference' in data) || isBoundedString(data.gatewayReference, 0, 120)) &&
+        (!('receiptUrl' in data) || isBoundedString(data.receiptUrl, 0, 500)) &&
+        data.status in ['pending_verification', 'verified', 'rejected'] &&
+        (!('verifiedBy' in data) || isBoundedString(data.verifiedBy, 0, 128)) &&
+        (!('notes' in data) || isBoundedString(data.notes, 0, 1000)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidVehicleSubmission(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'arrangement', 'fullName', 'phone', 'email',
+          'make', 'model', 'year', 'mileageKm', 'condition', 'transmission',
+          'fuelType', 'location', 'expectedPriceNgn', 'description', 'images',
+          'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'arrangement', 'fullName', 'phone', 'email',
+          'make', 'model', 'year', 'mileageKm', 'condition', 'transmission',
+          'fuelType', 'location', 'expectedPriceNgn', 'description', 'images',
+          'status', 'proposedValuationNgn', 'adminOfferNotes', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        data.arrangement in ['direct_purchase', 'consignment'] &&
+        isBoundedString(data.fullName, 2, 120) &&
+        isBoundedString(data.phone, 6, 32) &&
+        isBoundedString(data.email, 3, 200) &&
+        isBoundedString(data.make, 1, 60) &&
+        isBoundedString(data.model, 1, 80) &&
+        data.year is int && data.year >= 1980 && data.year <= 2030 &&
+        isNonNegNumber(data.mileageKm) &&
+        data.condition in ['Foreign Used', 'Nigerian Used', 'Brand New'] &&
+        data.transmission in ['Automatic', 'Manual', 'CVT', 'Semi-Automatic'] &&
+        data.fuelType in ['Petrol', 'Diesel', 'Hybrid', 'Electric'] &&
+        isBoundedString(data.location, 2, 120) &&
+        isNonNegNumber(data.expectedPriceNgn) &&
+        isBoundedString(data.description, 5, 3000) &&
+        data.images is list && data.images.size() <= 10 &&
+        (data.images.size() == 0 || isBoundedString(data.images[0], 5, 600)) &&
+        data.status in ['pending_review', 'valued', 'offer_sent', 'approved_for_listing', 'purchased', 'declined'] &&
+        (!('proposedValuationNgn' in data) || isNonNegNumber(data.proposedValuationNgn)) &&
+        (!('adminOfferNotes' in data) || isBoundedString(data.adminOfferNotes, 0, 1500)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidCarQuotation(data) {
+      return data.keys().hasAll([
+          'referenceNumber', 'userId', 'fullName', 'phone', 'email',
+          'preferredBrand', 'preferredModel', 'preferredYear', 'budgetNgn',
+          'preferredCondition', 'location', 'paymentPreference', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'referenceNumber', 'userId', 'fullName', 'phone', 'email',
+          'preferredBrand', 'preferredModel', 'preferredYear', 'budgetNgn',
+          'preferredCondition', 'location', 'paymentPreference',
+          'additionalRequirements', 'status', 'quotedPriceNgn',
+          'adminQuoteNotes', 'createdAt', 'updatedAt'
+        ]) &&
+        isBoundedString(data.referenceNumber, 3, 40) &&
+        isValidId(data.userId) &&
+        isBoundedString(data.fullName, 2, 120) &&
+        isBoundedString(data.phone, 6, 32) &&
+        isBoundedString(data.email, 3, 200) &&
+        isBoundedString(data.preferredBrand, 1, 60) &&
+        isBoundedString(data.preferredModel, 1, 80) &&
+        data.preferredYear is int && data.preferredYear >= 1980 && data.preferredYear <= 2030 &&
+        isNonNegNumber(data.budgetNgn) &&
+        data.preferredCondition in ['Foreign Used', 'Nigerian Used', 'Brand New', 'Any'] &&
+        isBoundedString(data.location, 2, 120) &&
+        data.paymentPreference in ['Outright', 'Installment', 'Financing'] &&
+        (!('additionalRequirements' in data) || isBoundedString(data.additionalRequirements, 0, 2000)) &&
+        data.status in ['pending', 'sourcing', 'quoted', 'accepted', 'closed'] &&
+        (!('quotedPriceNgn' in data) || isNonNegNumber(data.quotedPriceNgn)) &&
+        (!('adminQuoteNotes' in data) || isBoundedString(data.adminQuoteNotes, 0, 1500)) &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidChatConversation(data, sessionId) {
+      return data.keys().hasAll([
+          'sessionId', 'userId', 'whatsappNotificationStatus',
+          'handoverRequested', 'unansweredFlag', 'messages', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'sessionId', 'userId', 'customerName', 'customerPhone',
+          'enquiryCategory', 'preferredVehicle', 'budgetNgn',
+          'paymentPreference', 'enquiryReference', 'whatsappNotificationStatus',
+          'handoverRequested', 'unansweredFlag', 'messages', 'createdAt', 'updatedAt'
+        ]) &&
+        data.sessionId == sessionId &&
+        isValidId(data.userId) &&
+        (!('customerName' in data) || isBoundedString(data.customerName, 0, 120)) &&
+        (!('customerPhone' in data) || isBoundedString(data.customerPhone, 0, 32)) &&
+        (!('enquiryCategory' in data) || isBoundedString(data.enquiryCategory, 0, 60)) &&
+        (!('preferredVehicle' in data) || isBoundedString(data.preferredVehicle, 0, 160)) &&
+        (!('budgetNgn' in data) || isNonNegNumber(data.budgetNgn)) &&
+        (!('paymentPreference' in data) || isBoundedString(data.paymentPreference, 0, 60)) &&
+        (!('enquiryReference' in data) || isBoundedString(data.enquiryReference, 0, 40)) &&
+        data.whatsappNotificationStatus in ['none', 'pending', 'sent', 'failed', 'not_configured'] &&
+        data.handoverRequested is bool &&
+        data.unansweredFlag is bool &&
+        data.messages is list && data.messages.size() <= 40 &&
+        isValidTimestamp(data.createdAt) &&
+        isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidWhatsAppLog(data) {
+      return data.keys().hasAll([
+          'enquiryReference', 'recipientPhone', 'category', 'payloadSummary',
+          'status', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'enquiryReference', 'recipientPhone', 'category', 'payloadSummary',
+          'status', 'providerMessageId', 'errorMessage', 'createdAt'
+        ]) &&
+        isBoundedString(data.enquiryReference, 3, 40) &&
+        isBoundedString(data.recipientPhone, 6, 32) &&
+        isBoundedString(data.category, 2, 60) &&
+        isBoundedString(data.payloadSummary, 2, 1500) &&
+        data.status in ['sent', 'failed', 'not_configured'] &&
+        (!('providerMessageId' in data) || isBoundedString(data.providerMessageId, 0, 160)) &&
+        (!('errorMessage' in data) || isBoundedString(data.errorMessage, 0, 500)) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    // --- Collection Rules ---
+
+    match /admins/{adminUid} {
+      allow get: if isValidId(adminUid) && (isOwner(adminUid) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(adminUid) && isAdmin() && isValidAdminUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(adminUid) && isAdmin() && isValidAdminUser(incoming()) && incoming().createdAt == existing().createdAt && incoming().uid == existing().uid;
+      allow delete: if isValidId(adminUid) && isAdmin();
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUserProfile(incoming(), userId) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isValidUserProfile(incoming(), userId) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time && (
+        isAdmin() ||
+        (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phone', 'location', 'whatsappOptIn', 'emailNotifications', 'updatedAt']))
+      );
+      allow delete: if isValidId(userId) && isAdmin();
+
+      match /wishlist/{vehicleId} {
+        allow get: if isValidId(userId) && isValidId(vehicleId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isValidId(vehicleId) && isOwner(userId) && isValidWishlistItem(incoming(), userId, vehicleId) && incoming().createdAt == request.time && exists(/databases/$(database)/documents/vehicles/$(vehicleId));
+        allow delete: if isValidId(userId) && isValidId(vehicleId) && isOwner(userId);
+      }
+
+      match /notifications/{notificationId} {
+        allow get: if isValidId(userId) && isValidId(notificationId) && (isOwner(userId) || isAdmin());
+        allow list: if isValidId(userId) && (isOwner(userId) || isAdmin());
+        allow create: if isValidId(userId) && isValidId(notificationId) && (isAdmin() || isOwner(userId)) && isValidNotification(incoming(), userId) && incoming().createdAt == request.time;
+        allow update: if isValidId(userId) && isValidId(notificationId) && isValidNotification(incoming(), userId) && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['isRead']))
+        );
+        allow delete: if isValidId(userId) && isValidId(notificationId) && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    match /vehicles/{vehicleId} {
+      allow get: if isValidId(vehicleId);
+      allow list: if true;
+      allow create: if isValidId(vehicleId) && isAdmin() && isValidVehicle(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(vehicleId) && isAdmin() && isValidVehicle(incoming()) && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isValidId(vehicleId) && isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create, update: if isValidId(settingId) && isAdmin() && isValidSettings(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && (existing().published == true || isAdmin());
+      allow list: if resource.data.published == true || isAdmin();
+      allow create: if isValidId(testimonialId) && isAdmin() && isValidTestimonial(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(testimonialId) && isAdmin() && isValidTestimonial(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(testimonialId) && isAdmin();
+    }
+
+    match /enquiries/{enquiryId} {
+      allow get: if isValidId(enquiryId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(enquiryId) && isVerifiedUser() && isValidEnquiry(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'new' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(enquiryId) && isAdmin() && isValidEnquiry(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+      allow delete: if isValidId(enquiryId) && isAdmin();
+    }
+
+    match /financingApplications/{applicationId} {
+      allow get: if isValidId(applicationId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(applicationId) && isVerifiedUser() && isValidFinancingApplication(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'submitted' &&
+        incoming().approvedDepositNgn == 0 &&
+        incoming().approvedMonthlyPaymentNgn == 0 &&
+        incoming().approvedMonths == 0 &&
+        incoming().depositRecordedNgn == 0 &&
+        incoming().repaymentSchedule.size() == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/vehicles/$(incoming().vehicleId));
+      allow update: if isValidId(applicationId) && isValidFinancingApplication(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().vehicleId == existing().vehicleId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            isVerifiedUser() &&
+            existing().userId == request.auth.uid &&
+            existing().status == 'info_requested' &&
+            incoming().status == 'under_review' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['documentUrls', 'residentialAddress', 'employerName', 'monthlyIncomeNgn', 'status', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(applicationId) && isAdmin();
+    }
+
+    match /savingsPlans/{planId} {
+      allow get: if isValidId(planId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(planId) && isVerifiedUser() && isValidSavingsPlan(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().confirmedPaidNgn == 0 &&
+        incoming().pendingPaidNgn == 0 &&
+        incoming().status == 'active' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/vehicles/$(incoming().vehicleId));
+      allow update: if isValidId(planId) && isValidSavingsPlan(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().vehicleId == existing().vehicleId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            isVerifiedUser() &&
+            existing().userId == request.auth.uid &&
+            existing().status in ['active', 'paused'] &&
+            incoming().status in ['active', 'paused', 'refund_requested'] &&
+            incoming().confirmedPaidNgn == existing().confirmedPaidNgn &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'pendingPaidNgn', 'nextReminderDate', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(planId) && isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow get: if isValidId(paymentId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(paymentId) && isVerifiedUser() && isValidPaymentRecord(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'pending_verification' &&
+        !('verifiedBy' in incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(paymentId) && isAdmin() && isValidPaymentRecord(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+      allow delete: if isValidId(paymentId) && isAdmin();
+    }
+
+    match /vehicleSubmissions/{submissionId} {
+      allow get: if isValidId(submissionId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(submissionId) && isVerifiedUser() && isValidVehicleSubmission(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'pending_review' &&
+        !('proposedValuationNgn' in incoming()) &&
+        !('adminOfferNotes' in incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(submissionId) && isAdmin() && isValidVehicleSubmission(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+      allow delete: if isValidId(submissionId) && isAdmin();
+    }
+
+    match /quotations/{quotationId} {
+      allow get: if isValidId(quotationId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(quotationId) && isVerifiedUser() && isValidCarQuotation(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'pending' &&
+        !('quotedPriceNgn' in incoming()) &&
+        !('adminQuoteNotes' in incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(quotationId) && isAdmin() && isValidCarQuotation(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+      allow delete: if isValidId(quotationId) && isAdmin();
+    }
+
+    match /chatConversations/{sessionId} {
+      allow get: if isValidId(sessionId) && (isAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(sessionId) && isVerifiedUser() && isValidChatConversation(incoming(), sessionId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(sessionId) && isValidChatConversation(incoming(), sessionId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            isVerifiedUser() &&
+            existing().userId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'customerName', 'customerPhone', 'enquiryCategory', 'preferredVehicle',
+              'budgetNgn', 'paymentPreference', 'enquiryReference',
+              'whatsappNotificationStatus', 'handoverRequested', 'unansweredFlag',
+              'messages', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(sessionId) && isAdmin();
+    }
+
+    match /whatsappLogs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(logId) && isAdmin() && isValidWhatsAppLog(incoming()) && incoming().createdAt == request.time;
+      allow update, delete: if isValidId(logId) && isAdmin();
+    }
+  }
+}

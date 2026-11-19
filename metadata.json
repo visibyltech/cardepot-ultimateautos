@@ -1,0 +1,6 @@
+{
+  "name": "Car Depot by Ultimate Autos",
+  "description": "Mobile-first Nigerian automotive marketplace, dealership, Buy Now Pay Later financing, Save to Own, and AI sales assistant platform — Your Trusted Car Partner.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
