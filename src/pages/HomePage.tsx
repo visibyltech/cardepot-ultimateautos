@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -17,6 +17,14 @@ import { useApp } from '../context/AppContext';
 import { VehicleCard } from '../components/VehicleCard';
 import { SeoHead } from '../components/SeoHead';
 import { OFFICIAL_LOGO_PATH, formatNaira } from '../lib/format';
+
+const HERO_SLIDES = [
+  { src: '/assets/vehicles/range-rover-sport-2020-1.jpg', alt: 'Range Rover Sport' },
+  { src: '/assets/vehicles/lexus-rx350-2020-1.jpg', alt: 'Lexus RX 350' },
+  { src: '/assets/vehicles/mercedes-gle-2021-1.jpg', alt: 'Mercedes-Benz GLE' },
+  { src: '/assets/vehicles/toyota-prado-2021-1.jpg', alt: 'Toyota Land Cruiser Prado' },
+  { src: '/assets/vehicles/lexus-es350-2020-1.jpg', alt: 'Lexus ES 350' },
+];
 
 type HomeCollectionTab =
   | 'all'
@@ -38,6 +46,15 @@ const BODY_CATEGORIES = [
 export function HomePage() {
   const { vehicles, vehiclesLoading, settings, testimonials, isAdmin } = useApp();
   const [heroSearch, setHeroSearch] = useState('');
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setHeroSlide((current) => (current + 1) % HERO_SLIDES.length);
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<HomeCollectionTab>('all');
   const navigate = useNavigate();
 
@@ -132,14 +149,30 @@ export function HomePage() {
       <section className="bg-[#090B10] text-white border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-7 pb-6 sm:pb-8">
           <div className="relative isolate min-h-[430px] sm:min-h-[470px] overflow-hidden rounded-[26px] sm:rounded-[32px] bg-[#111722] shadow-2xl shadow-black/30">
-            <img
-              src="/assets/vehicles/range-rover-sport-2020-1.jpg"
-              alt="Premium Range Rover Sport in the Car Depot showroom"
-              className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
-              fetchPriority="high"
-            />
+            {HERO_SLIDES.map((slide, index) => (
+              <img
+                key={slide.src}
+                src={slide.src}
+                alt={slide.alt}
+                aria-hidden={index !== heroSlide}
+                className={`absolute inset-0 -z-20 h-full w-full object-cover object-center transition-opacity duration-1000 ease-in-out ${index === heroSlide ? 'opacity-100' : 'opacity-0'}`}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+              />
+            ))}
             <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#080A0F] via-[#080A0F]/65 to-[#080A0F]/10 sm:bg-gradient-to-r sm:from-[#080A0F]/95 sm:via-[#080A0F]/65 sm:to-[#080A0F]/10" />
             <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/20 via-transparent to-black/25" />
+            <div className="absolute bottom-4 right-5 z-10 flex items-center gap-2 sm:bottom-6 sm:right-8" aria-label="Hero vehicle slideshow">
+              {HERO_SLIDES.map((slide, index) => (
+                <button
+                  key={slide.src}
+                  type="button"
+                  onClick={() => setHeroSlide(index)}
+                  aria-label={`Show ${slide.alt}`}
+                  aria-current={index === heroSlide ? 'true' : undefined}
+                  className={`h-2 rounded-full transition-all duration-300 ${index === heroSlide ? 'w-7 bg-red-500' : 'w-2 bg-white/65 hover:bg-white'}`}
+                />
+              ))}
+            </div>
             <div className="flex min-h-[430px] sm:min-h-[470px] flex-col justify-end sm:justify-center p-5 sm:p-10 lg:p-14">
               <div className="max-w-2xl">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
