@@ -280,9 +280,8 @@ export function VehicleDetailPage() {
           </div>
         </div>
 
-        {/* Main Detail Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Left: Photo Gallery + Specs + Description */}
+        {/* Reorganised vehicle detail layout: gallery and buying choices first */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
               <div className="relative aspect-[16/10] bg-slate-900">
@@ -324,6 +323,83 @@ export function VehicleDetailPage() {
               )}
             </div>
 
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-mono-num text-slate-500 mb-1">
+                    Ref: {vehicle.referenceCode} · {vehicle.status.toUpperCase()}
+                  </p>
+                  <h1 className="font-display font-bold text-2xl text-slate-900">
+                    {vehicle.year} {vehicle.name}
+                  </h1>
+                </div>
+                {vehicle.verified && (
+                  <BadgeCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+                )}
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono-num font-bold text-3xl text-red-600">
+                  {formatNaira(vehicle.priceNgn)}
+                </span>
+                {vehicle.previousPriceNgn && vehicle.previousPriceNgn > vehicle.priceNgn && (
+                  <span className="font-mono-num text-sm text-slate-400 line-through">
+                    {formatNaira(vehicle.previousPriceNgn)}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-slate-400" />
+                {vehicle.location} · Listed by {settings.businessName}
+              </p>
+
+              {/* Direct Contact Actions */}
+              <div className="grid grid-cols-2 gap-2.5 pt-2">
+                <a
+                  href={vehicleWhatsAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 min-h-[54px] py-2.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
+                </a>
+                <a
+                  href={`tel:${settings.phoneNumber.replace(/\s+/g, '')}`}
+                  className="inline-flex items-center justify-center gap-2 min-h-[54px] py-2.5 px-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                  Call
+                </a>
+              </div>
+
+              {/* Financing & Save to Own Shortcuts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+                {vehicle.financingAvailable && (
+                  <Link
+                    to={`/financing?vehicleId=${encodeURIComponent(vehicle.id)}`}
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[54px] py-2.5 px-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-xl transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Car Financing
+                  </Link>
+                )}
+                {vehicle.saveToOwnAvailable && (
+                  <Link
+                    to={`/save-to-own?vehicleId=${encodeURIComponent(vehicle.id)}`}
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[54px] py-2.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 text-xs font-semibold rounded-xl transition-colors"
+                  >
+                    <PiggyBank className="w-4 h-4" />
+                    Start Pay Small Small
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 space-y-5">
             {/* Specifications Table */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6">
               <h2 className="font-display font-bold text-lg text-slate-900 mb-4">
@@ -357,7 +433,6 @@ export function VehicleDetailPage() {
                 ))}
               </dl>
             </div>
-
             {/* Description */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6">
               <h2 className="font-display font-bold text-lg text-slate-900 mb-3">
@@ -367,84 +442,6 @@ export function VehicleDetailPage() {
                 {vehicle.description}
               </p>
             </div>
-          </div>
-
-          {/* Right: Contiguous Purchase, Financing & Enquiry Column */}
-          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs font-mono-num text-slate-500 mb-1">
-                    Ref: {vehicle.referenceCode} · {vehicle.status.toUpperCase()}
-                  </p>
-                  <h1 className="font-display font-bold text-2xl text-slate-900">
-                    {vehicle.year} {vehicle.name}
-                  </h1>
-                </div>
-                {vehicle.verified && (
-                  <BadgeCheck className="w-6 h-6 text-emerald-600 shrink-0" />
-                )}
-              </div>
-
-              <div className="flex items-baseline gap-3">
-                <span className="font-mono-num font-bold text-3xl text-red-600">
-                  {formatNaira(vehicle.priceNgn)}
-                </span>
-                {vehicle.previousPriceNgn && vehicle.previousPriceNgn > vehicle.priceNgn && (
-                  <span className="font-mono-num text-sm text-slate-400 line-through">
-                    {formatNaira(vehicle.previousPriceNgn)}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-slate-400" />
-                {vehicle.location} · Listed by {settings.businessName}
-              </p>
-
-              {/* Direct Contact Actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-                <a
-                  href={vehicleWhatsAppUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp Enquiry
-                </a>
-                <a
-                  href={`tel:${settings.phoneNumber.replace(/\s+/g, '')}`}
-                  className="inline-flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                  Call Dealership
-                </a>
-              </div>
-
-              {/* Financing & Save to Own Shortcuts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
-                {vehicle.financingAvailable && (
-                  <Link
-                    to={`/financing?vehicleId=${encodeURIComponent(vehicle.id)}`}
-                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-xl transition-colors"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    Apply for Financing
-                  </Link>
-                )}
-                {vehicle.saveToOwnAvailable && (
-                  <Link
-                    to={`/save-to-own?vehicleId=${encodeURIComponent(vehicle.id)}`}
-                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 text-xs font-semibold rounded-xl transition-colors"
-                  >
-                    <PiggyBank className="w-4 h-4" />
-                    Start Save to Own
-                  </Link>
-                )}
-              </div>
-            </div>
-
             {/* Enquiry Form */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6">
               <h2 className="font-display font-bold text-base text-slate-900 mb-3">
