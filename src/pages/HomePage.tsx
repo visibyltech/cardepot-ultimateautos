@@ -128,162 +128,116 @@ export function HomePage() {
         description="Buy, sell, finance or save towards owning your next vehicle with Car Depot by Ultimate Autos — Your Trusted Car Partner in Lagos, Nigeria."
       />
 
-      {/* Compact Automotive Hero Banner (fast access to vehicles on Android mobile) */}
-      <section className="bg-[#0B0D10] text-white border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-7 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-            <div className="lg:col-span-7 space-y-4">
-              <p className="text-xs font-semibold tracking-wider text-red-500 uppercase">
-                {settings.tagline}
-              </p>
-              <h1 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.1] text-balance">
-                FIND YOUR DREAM CAR. PAY YOUR WAY.
-              </h1>
-              <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
-                Buy, sell, finance or save towards owning your next vehicle. Verified foreign and Nigerian used vehicles in Lagos with transparent dealership support.
-              </p>
-
-              {/* Hero Search */}
-              <form
-                onSubmit={handleHeroSearch}
-                className="flex items-center bg-white rounded-xl overflow-hidden shadow-lg max-w-xl"
-              >
-                <Search className="w-5 h-5 text-slate-400 ml-3.5 shrink-0" />
-                <input
-                  type="search"
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                  placeholder="Search Toyota Camry, Lexus RX 350, SUV..."
-                  aria-label="Search cars"
-                  className="w-full px-3 py-3.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="px-5 py-3.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold whitespace-nowrap shrink-0 transition-colors"
-                >
-                  Search
-                </button>
-              </form>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <Link
-                  to="/cars"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 hover:bg-slate-100 text-sm font-semibold rounded-xl transition-colors"
-                >
-                  Browse Cars
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/sell-your-car"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 text-sm font-semibold rounded-xl transition-colors"
-                >
-                  Sell Your Car
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Visual Showcase (Official Brand Lockup + Architectural Showroom Graphic) */}
-            <div className="lg:col-span-5 hidden sm:block">
-              <div className="relative rounded-2xl bg-gradient-to-br from-slate-900 via-[#151921] to-black border border-slate-800 p-6 overflow-hidden">
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 400 180"
-                  className="w-full h-36 opacity-25 mb-2"
-                  fill="none"
-                >
-                  <path
-                    d="M25 130 C55 128, 82 95, 130 78 C178 60, 248 58, 295 82 C330 98, 362 110, 382 126"
-                    stroke="#DC2626"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M15 142 H385"
-                    stroke="#94A3B8"
-                    strokeWidth="1.2"
-                    strokeDasharray="6 6"
-                  />
-                  <circle cx="105" cy="136" r="24" stroke="#E2E8F0" strokeWidth="2" />
-                  <circle cx="305" cy="136" r="24" stroke="#E2E8F0" strokeWidth="2" />
-                </svg>
-                <div className="flex flex-col items-center text-center">
-                  <img
-                    src={OFFICIAL_LOGO_PATH}
-                    alt="Car Depot by Ultimate Autos"
-                    className="h-24 w-auto object-contain mb-3"
-                    referrerPolicy="no-referrer"
-                  />
-                  <p className="text-xs text-slate-300 font-medium">
-                    {settings.publicListingTitle}
-                  </p>
-                  <p className="font-mono-num text-xs text-slate-400 mt-1">
-                    WhatsApp &amp; Sales: {settings.whatsappNumber}
-                  </p>
+      {/* Premium image-led automotive hero */}
+      <section className="bg-[#090B10] text-white border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-7 pb-6 sm:pb-8">
+          <div className="relative isolate min-h-[430px] sm:min-h-[470px] overflow-hidden rounded-[26px] sm:rounded-[32px] bg-[#111722] shadow-2xl shadow-black/30">
+            <img
+              src="/assets/vehicles/range-rover-sport-2020-1.jpg"
+              alt="Premium Range Rover Sport in the Car Depot showroom"
+              className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+              fetchPriority="high"
+            />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#080A0F] via-[#080A0F]/65 to-[#080A0F]/10 sm:bg-gradient-to-r sm:from-[#080A0F]/95 sm:via-[#080A0F]/65 sm:to-[#080A0F]/10" />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/20 via-transparent to-black/25" />
+            <div className="flex min-h-[430px] sm:min-h-[470px] flex-col justify-end sm:justify-center p-5 sm:p-10 lg:p-14">
+              <div className="max-w-2xl">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  Lagos • Cars • Finance
                 </div>
+                <h1 className="max-w-xl font-display text-[2.25rem] sm:text-5xl lg:text-6xl font-extrabold leading-[1.02] tracking-tight text-white">
+                  Find your next car.
+                  <span className="mt-1 block text-red-500">Drive your way.</span>
+                </h1>
+                <p className="mt-3 max-w-md text-sm sm:text-base font-medium leading-relaxed text-slate-200">
+                  Quality cars. Flexible ways to own.
+                </p>
+
+                <form
+                  onSubmit={handleHeroSearch}
+                  className="mt-6 flex w-full max-w-xl items-center overflow-hidden rounded-2xl border border-white/70 bg-white p-1.5 shadow-xl shadow-black/20"
+                >
+                  <Search className="ml-3 h-5 w-5 shrink-0 text-slate-400" />
+                  <input
+                    type="search"
+                    value={heroSearch}
+                    onChange={(e) => setHeroSearch(e.target.value)}
+                    placeholder="Search make, model or budget"
+                    aria-label="Search cars by make, model or budget"
+                    className="min-w-0 w-full bg-transparent px-3 py-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Search vehicles"
+                    className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-xl bg-red-600 text-white transition-colors hover:bg-red-700"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                </form>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/cars"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-950/30 transition-colors hover:bg-red-700"
+                  >
+                    Explore Cars
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    to="/sell-your-car"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/35 bg-black/30 px-5 py-3 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/15"
+                  >
+                    Sell Your Car
+                  </Link>
+                </div>
+                <p className="mt-4 text-[10px] sm:text-xs font-semibold tracking-[0.12em] text-white/75">
+                  BUY <span className="px-1 text-red-400">•</span> SELL <span className="px-1 text-red-400">•</span> FINANCE <span className="px-1 text-red-400">•</span> SAVE TO OWN
+                </p>
               </div>
             </div>
           </div>
 
-          {/* 4 Prominent Service Shortcuts */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-7">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             <Link
               to="/cars"
-              className="group bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-xl p-4 flex items-center gap-3 transition-colors"
+              className="group flex min-h-[66px] items-center gap-3 rounded-2xl border border-slate-800 bg-[#111722] px-3.5 py-3 transition-all hover:border-red-500/60 hover:bg-[#171E2A]"
             >
-              <div className="w-10 h-10 rounded-lg bg-red-600/15 text-red-500 flex items-center justify-center shrink-0">
-                <Car className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-semibold text-sm text-white truncate">
-                  Buy a Car
-                </p>
-                <p className="text-xs text-slate-400 truncate">Verified inventory</p>
-              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+                <Car className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-sm font-bold text-white">Browse Cars</span>
+              <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-red-400" />
             </Link>
-
             <Link
               to="/financing"
-              className="group bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-xl p-4 flex items-center gap-3 transition-colors"
+              className="group flex min-h-[66px] items-center gap-3 rounded-2xl border border-slate-800 bg-[#111722] px-3.5 py-3 transition-all hover:border-red-500/60 hover:bg-[#171E2A]"
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-700/40 text-slate-200 flex items-center justify-center shrink-0">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-semibold text-sm text-white truncate">
-                  Buy Now Pay Later
-                </p>
-                <p className="text-xs text-slate-400 truncate">Car financing plans</p>
-              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-slate-200">
+                <CreditCard className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-sm font-bold text-white">Car Finance</span>
+              <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-red-400" />
             </Link>
-
             <Link
               to="/save-to-own"
-              className="group bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-xl p-4 flex items-center gap-3 transition-colors"
+              className="group flex min-h-[66px] items-center gap-3 rounded-2xl border border-slate-800 bg-[#111722] px-3.5 py-3 transition-all hover:border-red-500/60 hover:bg-[#171E2A]"
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-700/40 text-slate-200 flex items-center justify-center shrink-0">
-                <PiggyBank className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-semibold text-sm text-white truncate">
-                  Save to Own
-                </p>
-                <p className="text-xs text-slate-400 truncate">Pay Small Small</p>
-              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-slate-200">
+                <PiggyBank className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-sm font-bold text-white">Save to Own</span>
+              <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-red-400" />
             </Link>
-
             <Link
-              to="/sell-your-car"
-              className="group bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-xl p-4 flex items-center gap-3 transition-colors"
+              to="/request-car"
+              className="group flex min-h-[66px] items-center gap-3 rounded-2xl border border-slate-800 bg-[#111722] px-3.5 py-3 transition-all hover:border-red-500/60 hover:bg-[#171E2A]"
             >
-              <div className="w-10 h-10 rounded-lg bg-red-600/15 text-red-500 flex items-center justify-center shrink-0">
-                <UploadCloud className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-semibold text-sm text-white truncate">
-                  Sell Your Car
-                </p>
-                <p className="text-xs text-slate-400 truncate">Direct or consignment</p>
-              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-sm font-bold text-white">Find My Car</span>
+              <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-red-400" />
             </Link>
           </div>
         </div>
