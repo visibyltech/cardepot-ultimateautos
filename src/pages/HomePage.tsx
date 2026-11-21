@@ -4,6 +4,8 @@ import {
   ArrowRight,
   BadgeCheck,
   Car,
+  Truck,
+  Bus,
   CreditCard,
   PiggyBank,
   Search,
@@ -42,6 +44,42 @@ const BODY_CATEGORIES = [
   { label: 'Hatchbacks', value: 'Hatchback' },
   { label: 'Buses & Vans', value: 'Bus' },
 ];
+
+const BRAND_LOGO_SLUGS: Record<string, string> = {
+  toyota: 'toyota',
+  lexus: 'lexus',
+  hyundai: 'hyundai',
+  ford: 'ford',
+  'land rover': 'landrover',
+  landrover: 'landrover',
+  kia: 'kia',
+  honda: 'honda',
+  mercedes: 'mercedesbenz',
+  'mercedes-benz': 'mercedesbenz',
+  bmw: 'bmw',
+  nissan: 'nissan',
+  volkswagen: 'volkswagen',
+  audi: 'audi',
+  jeep: 'jeep',
+  mazda: 'mazda',
+  mitsubishi: 'mitsubishi',
+  peugeot: 'peugeot',
+  volvo: 'volvo',
+  chevrolet: 'chevrolet',
+  porsche: 'porsche',
+  jaguar: 'jaguar',
+  'range rover': 'landrover',
+};
+
+function getBrandLogo(brand: string) {
+  return BRAND_LOGO_SLUGS[brand.trim().toLowerCase()] || null;
+}
+
+function CategoryIcon({ value }: { value: string }) {
+  if (value === 'Pickup') return <Truck className="h-10 w-10" strokeWidth={1.5} />;
+  if (value === 'Bus') return <Bus className="h-10 w-10" strokeWidth={1.5} />;
+  return <Car className="h-10 w-10" strokeWidth={1.5} />;
+}
 
 export function HomePage() {
   const { vehicles, vehiclesLoading, settings, testimonials, isAdmin } = useApp();
@@ -387,16 +425,42 @@ export function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
               {settings.popularBrands.map((brand) => {
                 const count = brandCounts[brand.toLowerCase()] || 0;
+                const logo = getBrandLogo(brand);
                 return (
                   <Link
                     key={brand}
                     to={`/cars?make=${encodeURIComponent(brand)}`}
-                    className="group px-3 py-3 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 rounded-xl text-center transition-colors"
+                    className="group relative isolate min-h-[104px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 px-3 py-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md"
                   >
-                    <p className="text-sm font-semibold text-slate-800 group-hover:text-white truncate">
+                    {logo && (
+                      <img
+                        src={`https://cdn.simpleicons.org/${logo}`}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="pointer-events-none absolute -right-2 -bottom-2 h-20 w-20 object-contain opacity-[0.09] grayscale transition-all duration-300 group-hover:opacity-[0.16] group-hover:grayscale-0"
+                        onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                      />
+                    )}
+                    <span className="relative z-10 flex h-10 items-center justify-center">
+                      {logo ? (
+                        <img
+                          src={`https://cdn.simpleicons.org/${logo}`}
+                          alt={`${brand} logo`}
+                          loading="lazy"
+                          className="max-h-8 max-w-[76px] object-contain opacity-75 transition-opacity group-hover:opacity-100"
+                          onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span className="font-display text-lg font-extrabold tracking-tight text-slate-400 group-hover:text-red-600">
+                          {brand.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                    <p className="relative z-10 mt-1 truncate text-sm font-bold text-slate-800">
                       {brand}
                     </p>
-                    <p className="text-[11px] font-mono-num text-slate-500 group-hover:text-slate-300 mt-0.5">
+                    <p className="relative z-10 mt-0.5 font-mono-num text-[11px] text-slate-500">
                       {count} {count === 1 ? 'car' : 'cars'}
                     </p>
                   </Link>
@@ -416,15 +480,18 @@ export function HomePage() {
                   <Link
                     key={cat.value}
                     to={`/cars?bodyType=${encodeURIComponent(cat.value)}`}
-                    className="px-4 py-3 bg-slate-50 hover:border-red-500 border border-slate-200 rounded-xl flex items-center justify-between text-sm font-semibold text-slate-800 transition-colors"
+                    className="group relative isolate min-h-[112px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white px-3.5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md"
                   >
-                    <div>
-                      <span className="block">{cat.label}</span>
-                      <span className="block text-[11px] font-mono-num font-normal text-slate-500">
+                    <div className="relative z-10">
+                      <span className="block font-bold">{cat.label}</span>
+                      <span className="mt-1 block font-mono-num text-[11px] font-normal text-slate-500">
                         {count} available
                       </span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="pointer-events-none absolute -bottom-2 -right-1 text-slate-300/60 transition-colors group-hover:text-red-200">
+                      <CategoryIcon value={cat.value} />
+                    </span>
+                    <ArrowRight className="absolute bottom-3 left-3.5 z-10 h-4 w-4 text-slate-400 transition-all group-hover:translate-x-1 group-hover:text-red-600" />
                   </Link>
                 );
               })}
