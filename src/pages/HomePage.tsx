@@ -144,7 +144,7 @@ export function HomePage() {
               <div className="max-w-2xl">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  Lagos • Cars • Finance
+                  CAR DEPOT • LAGOS • NIGERIA
                 </div>
                 <h1 className="max-w-xl font-display text-[2.25rem] sm:text-5xl lg:text-6xl font-extrabold leading-[1.02] tracking-tight text-white">
                   Find your next car.
