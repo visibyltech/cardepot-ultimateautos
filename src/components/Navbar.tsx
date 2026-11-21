@@ -54,12 +54,15 @@ export function Navbar() {
               className="h-9 sm:h-11 w-auto object-contain"
               referrerPolicy="no-referrer"
             />
-            <div className="hidden sm:flex flex-col leading-none">
-              <span className="font-display font-bold text-sm tracking-tight text-white whitespace-nowrap">
-                CAR DEPOT
+            <div className="flex min-w-0 flex-col leading-none">
+              <span className="font-display font-extrabold text-[15px] sm:text-lg tracking-[0.04em] text-white whitespace-nowrap">
+                CAR <span className="text-red-500">DEPOT</span>
               </span>
-              <span className="text-[10px] tracking-wider text-slate-400 whitespace-nowrap">
+              <span className="mt-1 text-[8px] sm:text-[10px] font-semibold tracking-[0.13em] text-slate-300 whitespace-nowrap">
                 BY ULTIMATE AUTOS
+              </span>
+              <span className="mt-1 hidden sm:block text-[8px] font-medium tracking-[0.16em] text-slate-500 whitespace-nowrap">
+                YOUR TRUSTED CAR PARTNER
               </span>
             </div>
           </Link>
